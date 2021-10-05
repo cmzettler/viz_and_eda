@@ -165,3 +165,109 @@ weather_df %>%
 By moving color = name from global to the geometry, you put color only
 in the points, but the line is no longer applying to the individual
 lines, but to the global piece
+
+Let’s make one more scatterplot
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, size = prcp)) +
+  geom_point(alpha = 0.3)+
+  facet_grid(. ~ name) +
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+![](Viz_Part1_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax)) +
+  geom_point(aes(size = prcp), alpha = 0.3)+
+  facet_grid(. ~ name) +
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+![](Viz_Part1_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax)) +
+  geom_point(aes(size = prcp), alpha = 0.3)+
+  facet_grid(. ~ name) +
+  geom_smooth()
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+![](Viz_Part1_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
+
+se = FALSE (removing standard error bars across the smooth line)
+
+## Use data manipulation as part of this
+
+``` r
+weather_df %>% 
+  filter(name == "CentralPark_NY") %>% 
+  mutate(
+    tmax = tmax * (9/5)+ 32, 
+    tmin = tmin * (9/5) +32
+  ) %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point()
+```
+
+![](Viz_Part1_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+## Stacking geoms
+
+Which geoms do you want?
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_smooth()
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_smooth).
+
+![](Viz_Part1_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_hex()
+```
+
+    ## Warning: Removed 15 rows containing non-finite values (stat_binhex).
+
+![](Viz_Part1_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_bin_2d()
+```
+
+    ## Warning: Removed 15 rows containing non-finite values (stat_bin2d).
+
+![](Viz_Part1_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+
+Changes data instensity (how many datapoints at each place); how dense
+data is at any particulat point
