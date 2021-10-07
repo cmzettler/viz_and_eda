@@ -148,3 +148,35 @@ weather_df %>%
 <img src="Viz_Part2_files/figure-gfm/unnamed-chunk-4-2.png" width="90%" />
 
 Scale, on this piece (x, y, or color), and its a continuous var
+
+## Themes
+
+Plot elements that aren’t directly tied to data, geometry, scales
+
+Things that make your plot look nicer
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = 0.3) +
+  labs(
+    title = "Temperature at three stations", 
+    x = "Minimum daily temp (C)", 
+    y = "Maximum daily temp (C)", 
+    caption = "Data from moaa package with three stations"
+  ) +
+    scale_color_viridis_d() + 
+  theme_minimal() +
+  theme(legend.position = "bottom") 
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="Viz_Part2_files/figure-gfm/unnamed-chunk-5-1.png" width="90%" />
+
+It cares what order you do certain steps in; the bw command is a delete
+the prior theme and do this instead; so that “trumps” legend position if
+you do that second
+
+Other themes: theme\_minimal() theme\_bw() ggthemes::theme\_excel()
+–&gt; looks like it came out of Excel
