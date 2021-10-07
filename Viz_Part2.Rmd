@@ -117,6 +117,28 @@ Other themes: theme_minimal()
 theme_bw()
 ggthemes::theme_excel() --> looks like it came out of Excel 
 
+## `data` in geoms
+
+```{r}
+
+central_park = 
+  weather_df %>% 
+  filter(name == "CentralPark_NY")
+
+waikiki = 
+  weather_df %>% 
+  filter(name == "Waikiki_HA")
+
+waikiki %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point() + 
+  geom_line()
+
+waikiki %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point() + 
+  geom_line(data = central_park)
+```
 
 
 
