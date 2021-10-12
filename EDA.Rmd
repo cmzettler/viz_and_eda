@@ -5,6 +5,7 @@ output: github_document
 
 ```{r}
 library(tidyverse)
+library(knitr)
 
 knitr::opts_chunk$set(
   fig.width = 6, 
@@ -36,8 +37,224 @@ weather_df =
 
 lubridate package creates a month variable - rounds date down to the first day of the month 
 
+## `group_by`
+
+```{r}
+weather_df %>% 
+  group_by(name)
+
+weather_df %>% 
+  group_by(name, month)
+```
+
+Lists the number of groups I have at the top (nothing much else changes)
+
+## count some things
+
+```{r}
+weather_df %>% 
+  group_by(month) %>% 
+  summarize(n_obs = n())
+
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(n_obs = n())
+```
+
+Column for the group that I defined and then column two shows observations
+
+Then column for each part of the group and then n obs
+
+It's nice that summarize produces a data frame
+
+`table` doesn't and that's bad (can't plug this into ggplot)
+
+```{r}
+weather_df %>% 
+  pull(name) %>% 
+  table()
+
+weather_df %>% 
+  janitor::tabyl(month, name)
+```
+
+This is the same information as group by then summarize, but the first one is a data frame. 
+
+This is more human readable for NOW but the other option is more helpful to then pipe into other things
+
+## More general summaries 
+
+Let's count, take means, look at SDs ...
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  summarize(
+    n_obs = n(), 
+    mean_tmax = mean(tmax)
+  )
+
+weather_df %>% 
+  group_by(name) %>% 
+  summarize(
+    n_obs = n(), 
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  )
+
+weather_df %>% 
+  group_by(name) %>% 
+  summarize(
+    n_obs = n(), 
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    median_tmax = median(tmax, na.rm = TRUE), 
+    sd_tmax = sd(tmax, na.rm = TRUE)
+  )
+
+weather_df %>% 
+  group_by(month, name) %>% 
+  summarize(
+    n_obs = n(), 
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    median_tmax = median(tmax, na.rm = TRUE), 
+    sd_tmax = sd(tmax, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) + 
+  geom_point() + 
+  geom_line()
+
+weather_df %>% 
+  group_by(name) %>% 
+  summarize(
+    n_obs = n(), 
+    mean_tmax = mean(tmax, na.rm = TRUE)) %>% 
+    knitr::kable(digits = 2)
+```
+
+Waikiki - NA for tmax (because of a missing observation in the original df)
+
+## grouped `mutate`
+
+```{r}
+weather_df %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  )
+```
+
+Added a column that calculates the mean of tmax across all observations 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  )
+```
+group --> mutate, adds column to dataframe that is very group-specific 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE), 
+    centered_tmax = tmax - mean_tmax
+  )
+```
+
+subtract group-specific mean from the intividual tmax 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE), 
+    centered_tmax = tmax - mean_tmax
+  ) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) + 
+  geom_point()
+```
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    tmax_rank = min_rank(tmax)
+  )
+```
+
+ranked coldest days in Central Park, in x name 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    tmax_rank = min_rank(tmax)
+  ) %>% 
+  filter(tmax_rank < 2)
+
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    tmax_rank = min_rank(desc(tmax))
+  ) %>% 
+  filter(tmax_rank < 2)
+```
+
+Variety of different ranking functions; deal with ties in different ways, use min rank and if ties really matter you can see help files 
+
+Windowed functions depend on other things within the df (vs. just absolute value)
+
+Lagged variables (lagged effect of some exposure down the road)
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    lagged_tmax = lag(tmax, n=1)
+  )
+```
+
+NA value #1 because there are no dates before 
+You need the grouping structure in place or else the first day from Waikiki would pull from lag temp max from Waterhole which is super inaccurate 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    lagged_tmax = lag(tmax, n=1), 
+    tmax_diff = tmax - lagged_tmax) %>% 
+  summarize(diff_sd = sd(tmax_diff, na.rm = TRUE))
+```
+
+Day-to-day fluctuations --> 4 degrees in Central Park! 
+
+## Limitations 
+
+What if my "summary" is a linear model ...
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  summarize(cor_tmin_tmax = cor(tmin, tmax, use = "complete"))
+
+weather_df %>% 
+  filter(name == "CentralPark_NY") %>% 
+  lm(tmax ~ tmin, data = .)
 
 
+```
+
+This is not a single number summary 
+- Group by and summarize work well with single number summaries 
+
+
+lm = linear model 
+
+weather_df %>% 
+  group_by(name) %>% 
+  summarize(lm = lm(tmax ~ tmin) 
+
+THIS DOESN'T WORK 
 
 
 
